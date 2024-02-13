@@ -32,7 +32,6 @@ with wave.open(OUTPUT, 'wb') as w:
     w.setsampwidth(p.get_sample_size(FRT))
     w.setframerate(RT)
     w.writeframes(b''.join(frames))
-# w.close()
 
 # открытие файда
 record_file = sr.WavFile(OUTPUT)
@@ -40,10 +39,10 @@ r = sr.Recognizer()
 
 with record_file as audio:
     try:
-        text = r.record(audio)
+        # content = r.record(audio)
         r.adjust_for_ambient_noise(audio)
-        text = r.recognize_google(audio, language='ru-RU')
-        print(text)
+        # text = r.recognize_google(audio, language='ru-RU')
+        print(r.recognize_google(r.record(audio), language='ru-RU'))
     except sr.UnknownValueError:
         print('Не удалось распознать речь')
     except sr.RequestError as e:
