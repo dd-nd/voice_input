@@ -9,6 +9,7 @@ FRT = pyaudio.paInt16   # значение амплитуды
 RT = 44100      # частота 
 REC_SEC = 5     #длина записи
 OUTPUT = 'out.wav'
+STOP_SYMBOL = ''
 
 p = pyaudio.PyAudio()
 
@@ -25,7 +26,7 @@ def record_audio():     # ЗАПИСЬ АУДИО (2)
     print('идет запись...')
     frames = []
 
-    for i in range(0, int(RT / CHUNK * REC_SEC)):
+    while STOP_SYMBOL != '/':
         data = stream.read(CHUNK)
         frames.append(data)
 
@@ -35,6 +36,7 @@ def record_audio():     # ЗАПИСЬ АУДИО (2)
     p.terminate()
 
     save_frames(frame=frames)   # (1)
+    open_wav()  # (3)
 
 
 def open_wav():     # ОТКРЫТИЕ ФАЙЛА (3)
@@ -51,10 +53,24 @@ def open_wav():     # ОТКРЫТИЕ ФАЙЛА (3)
             print(f'Ошибка при обращении к сервису распознавания речи; {e}')
 
 
-if __name__ == '__main__':
-    record_audio()  # (2) ->> (1)
-    open_wav()  # (3)
+def stop_input():
+    global STOP_SYMBOL
 
+    print('для остановки записи введите /')
+    STOP_SYMBOL = sys.stdin.read(1)
+
+
+if __name__ == '__main__':
+    audio_thread = threading.Thread(target=record_audio)
+    stop_thread = threading.Thread(target=stop_input)
+
+    audio_thread.start()
+    stop_thread.start()
+
+    if STOP_SYMBOL == '/':
+        print('запись остановлена')
+        open_wav()
+    sys.exit()
 
 
 
