@@ -39,7 +39,6 @@ r = sr.Recognizer()
 
 with record_file as audio:
     try:
-        # content = r.record(audio)
         r.adjust_for_ambient_noise(audio)
         # text = r.recognize_google(audio, language='ru-RU')
         print(r.recognize_google(r.record(audio), language='ru-RU'))
