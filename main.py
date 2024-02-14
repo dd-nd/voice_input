@@ -67,7 +67,7 @@ if __name__ == '__main__':
     audio_thread.start()
     stop_thread.start()
 
-    sys.exit()
+    audio_thread.join()
 
 
 
@@ -90,7 +90,7 @@ if __name__ == '__main__':
         
 
 
-# воспроизведение записи
+# # воспроизведение записи
 # with wave.open(OUTPUT, 'rb') as wf:
 #     def callback(in_data, frame_count, time_info, status):
 #         data = wf.readframes(frame_count)
