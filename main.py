@@ -67,9 +67,6 @@ if __name__ == '__main__':
     audio_thread.start()
     stop_thread.start()
 
-    if STOP_SYMBOL == '/':
-        print('запись остановлена')
-        open_wav()
     sys.exit()
 
 
