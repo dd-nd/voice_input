@@ -3,12 +3,13 @@ import pyaudio
 import wave
 import sys
 import threading
+from transformers import pipeline
 
 CHUNK = 1024    # определяет форму аудиосигнала
 FRT = pyaudio.paInt32   # значение амплитуды
 RT = 44100      # частота 
 # REC_SEC = 5     #длина записи
-OUTPUT = 'out.mp3'
+OUTPUT = 'out.flac'
 STOP_SYMBOL = ''
 
 p = pyaudio.PyAudio()
@@ -41,12 +42,16 @@ def record_audio():     # ЗАПИСЬ АУДИО (2)
 
 def open_wav():     # ОТКРЫТИЕ ФАЙЛА (3)
     record_file = sr.WavFile(OUTPUT)
-    r = sr.Recognizer()
+    # r = sr.Recognizer()
 
     with record_file as audio:
         try:
-            r.adjust_for_ambient_noise(audio)
-            print(r.recognize_google(r.record(audio), language='ru-RU'))
+            # r.adjust_for_ambient_noise(audio)
+            # print(r.recognize_google(r.record(audio), language='ru-RU'))
+
+            transcriber = pipeline(model="openai/whisper-medium", generate_kwargs={"language": "russian"})
+            transcriber(OUTPUT)
+
         except sr.UnknownValueError:
             print('Не удалось распознать речь')
         except sr.RequestError as e:
