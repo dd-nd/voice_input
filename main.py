@@ -5,10 +5,10 @@ import sys
 import threading
 
 CHUNK = 1024    # определяет форму аудиосигнала
-FRT = pyaudio.paInt16   # значение амплитуды
+FRT = pyaudio.paInt32   # значение амплитуды
 RT = 44100      # частота 
-REC_SEC = 5     #длина записи
-OUTPUT = 'out.wav'
+# REC_SEC = 5     #длина записи
+OUTPUT = 'out.mp3'
 STOP_SYMBOL = ''
 
 p = pyaudio.PyAudio()
