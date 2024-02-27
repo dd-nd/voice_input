@@ -12,6 +12,8 @@ STOP_SYMBOL = threading.Event()
 p = pyaudio.PyAudio()
 
 def save_frames(frames):        # СОЗДАНИЕ .WAV ФАЙЛА (1)
+    # with io.BytesIO() as wav_file:
+    #     with wave.open(wav_file, 'wb') as w:
     with wave.open(OUTPUT, 'wb') as w:
         w.setnchannels(1)
         w.setsampwidth(p.get_sample_size(FRT))
@@ -27,10 +29,6 @@ def record_audio():             # ЗАПИСЬ АУДИО (2)
     while not STOP_SYMBOL.is_set():
         data = stream.read(CHUNK)
         frames.append(data)
-
-    # while STOP_SYMBOL != '/':
-    #     data = stream.read(CHUNK)
-    #     frames.append(data)
 
     print('Запись сделана!')
     stream.stop_stream()
@@ -52,10 +50,6 @@ def open_wav():                 # ОТКРЫТИЕ ФАЙЛА (3)
 def stop_input():
     input('Для завершения записи нажмине Enter\n')
     STOP_SYMBOL.set()
-    
-    # global STOP_SYMBOL
-    # print('для остановки записи введите /')
-    # STOP_SYMBOL = sys.stdin.read(1)
 
 
 if __name__ == '__main__':
