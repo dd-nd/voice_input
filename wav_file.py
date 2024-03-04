@@ -31,9 +31,14 @@ def save_data(frames):
 # Speech to text
 def transformation_frames(data):
     try:
-        transcriber = pipeline(model="openai/whisper-large", generate_kwargs={"language": "russian", "do_sample":True})
+        transcriber = pipeline(model="openai/whisper-small", 
+                               task="automatic-speech-recognition", 
+                               generate_kwargs={"language":"russian", 
+                                                "do_sample":False
+                                                # , "temperature":0.1
+                                                })
         return(transcriber(data)['text'])
-    except Exception as e:
+    except Exception as e:  
         return str(e)
 
 # Остановка записи по нажатии клавиши
@@ -45,6 +50,7 @@ def stop_input():
 def record_audio():
     stream = p.open(format=FRT, channels=1, rate=RT, input=True, frames_per_buffer=CHUNK)
     frames = []
+
 
     print('Записываем...')
     while not STOP_SYMBOL.is_set():
@@ -58,14 +64,15 @@ def record_audio():
 
     ready_data = save_data(frames)
     # ready_data = reading_bytesIO(saved_data)
-
-    transformation_frames(ready_data)
+    # print(ready_data)
+    # print(transformation_frames(ready_data))
+    text = transformation_frames(ready_data)
+    print(text)
 
 
 if __name__ == '__main__':
     audio_thread = threading.Thread(target=record_audio)
     stop_thread = threading.Thread(target=stop_input)
-
 
     audio_thread.start()
     stop_thread.start()
