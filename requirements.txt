@@ -1,3 +1,4 @@
 PyAudio==0.2.14
 transformers==4.37.2
 ffmpeg==1.4
+keyboard==0.13.5

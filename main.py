@@ -41,7 +41,7 @@ def record_audio():             # ЗАПИСЬ АУДИО (2)
 
 def open_wav():                 # ОТКРЫТИЕ ФАЙЛА (3)
     try:
-        transcriber = pipeline(model="openai/whisper-large", generate_kwargs={"language": "russian"})
+        transcriber = pipeline(model="openai/whisper-large-v3", generate_kwargs={"language": "russian"})
         print(transcriber(OUTPUT)['text'])  # json
     except Exception as e:
         print(e)
