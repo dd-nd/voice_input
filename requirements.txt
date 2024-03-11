@@ -8,3 +8,4 @@ numpy==1.26.4
 flask==3.0.2
 waitress==3.0.0
 Flask-CORS==4.0.0
+torch==2.2.0
