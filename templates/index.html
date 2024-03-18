@@ -103,7 +103,7 @@
             const formData = new FormData();
             formData.append('audio', audioBlob, 'audio.wav');
 
-            fetch('http://127.0.0.1:8800/transcribe', {
+            fetch('/transcribe', {
                 method: 'POST',
                 body: formData
             })

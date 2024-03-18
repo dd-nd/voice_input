@@ -1,11 +1,13 @@
-from flask import Flask, jsonify, request
-from flask_cors import CORS
+from flask import Flask, jsonify, request, render_template
 from transformers import pipeline
 from waitress import serve
 
 app = Flask(__name__)
 transcriber = pipeline("automatic-speech-recognition", model="openai/whisper-tiny", generate_kwargs={"language": "russian"})
-CORS(app)
+
+@app.route('/')
+def main():
+    return render_template('index.html')
 
 # Функция для преобразования аудио в текст
 @app.route('/transcribe', methods=['POST'])
@@ -21,7 +23,6 @@ def transcribe_audio():
         transcription = transcriber(audio_data).get('text')
         
         response = jsonify({'transcription': transcription})
-        response.headers['Access-Control-Allow-Origin'] = '*'  # Заголовок для CORS
         
         return response
     except Exception as e:
