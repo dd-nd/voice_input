@@ -2,159 +2,23 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8" />
+        <link rel= "stylesheet" type= "text/css" href="{{ url_for('static',filename='style.css') }}">
         <title>Real-time Audio Recognition</title>
     </head>
     <body>
-
-    <style>
-        .btn {
-            border-radius: 25px;
-            border: none;
-            width: 300px;
-            height: 40px;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-    
-        .btn:hover {
-            background-color: antiquewhite;
-        }
-    
-        .container {
-            justify-content: center;
-            height: 100dvh;
-            align-items: center;
-            display: flex;
-            gap: 10px;
-            flex-direction: column;
-        }
-    
-        .audio-player {
-            width: 300px;
-            padding: 0;
-            margin: 0;
-        }
-    
-        .text {
-            margin: 20px 0 20px 0;
-            /* font-weight: bold; */
-        }
-    
-        audio::-webkit-media-controls-panel {
-            background-color: antiquewhite;
-            width: 10px;
-        }
-    
-        audio::-webkit-media-controls-mute-button {
-            width: 10px;
-        }
-    </style>
-
-    <main style="display: flex; flex-direction: column; align-items: center; height: 100dvh; justify-content: center">
-        <div style="width: 600px; height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
-            <div style="display: flex">
-                <button id="startButton" class="btn start" onclick="startRecording()">Старт</button>
-                <button id="stopButton" class="btn stop" onclick="stopRecording()" style="display: none" disabled>Стоп</button>
+        <main style="display: flex; flex-direction: column; align-items: center; height: 100dvh; justify-content: center">
+            <div style="width: 600px; height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
+                <div style="display: flex">
+                    <button id="startButton" class="btn start" onclick="startRecording()">Начать запись</button>
+                    <button id="stopButton" class="btn stop" onclick="stopRecording()" style="display: none" disabled>Остановить запись</button>
+                </div>
+                <div style="text-align: center;">
+                    <div id="transcriptionResult" class="text result"></div>
+                    <p id="recordingIndicator"  class="status-record" style="display: none">Записываем...</p>
+                </div>
             </div>
-            <div style="text-align: center;">
-                <div id="transcriptionResult" class="text result"></div>
-                <p id="recordingIndicator"  class="status-record" style="display: none">Записываем...</p>
-            </div>
-        </div>
-    </main>
+        </main>
 
-    <script>
-        let recorder;
-        let audioChunks = [];
-        let intervalId;
-
-        function startRecording() {
-            audioChunks = [];
-            navigator.mediaDevices
-            .getUserMedia({ audio: true })
-            .then((stream) => {
-                recorder = new MediaRecorder(stream, { audioBitsPerSecond: 16000 });
-
-                recorder.ondataavailable = (e) => {
-                    if (e.data.size > 0) {
-                        audioChunks.push(e.data);
-                    }
-                };
-
-                recorder.start();
-                document.getElementById('startButton').style.display = 'none';
-                document.getElementById('stopButton').style.display = 'inline';
-                document.getElementById('recordingIndicator').style.display = 'inline';
-                document.getElementById('stopButton').disabled = false;
-
-                intervalId = setInterval(() => {
-                    sendAudioData();
-                }, 3000);
-            })
-            .catch((error) => {
-                console.error('Error accessing microphone:', error);
-            });
-        }
-
-        let isNewResponseReceived = false;
-
-        async function sendAudioData() {
-            if (recorder.state === 'recording') {
-                recorder.requestData();
-            }
-
-            recorder.ondataavailable = async (e) => {
-                audioChunks.push(e.data);
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'audio.wav');
-
-                await fetch('/transcribe', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка при отправке аудио.');
-                    }
-                    return response.json();
-                })
-                .then((data) => {
-                    if (isNewResponseReceived) {
-                        document.getElementById('transcriptionResult').innerText += data.transcription;
-                    } else {
-                        document.getElementById('transcriptionResult').innerText = data.transcription + '////';
-                        isNewResponseReceived = true;
-                    }
-                })
-                .catch((error) => {
-                    document.getElementById('transcriptionResult').innerText = 'Ошибка: ' + error.message;
-                });
-            };
-        }
-
-        function stopRecording() {
-            //clearInterval(intervalId);
-            recorder.stop();
-            //sendAudioData();
-            recorder.onstop = () => {
-                document.getElementById('startButton').style.display = 'inline';
-                document.getElementById('stopButton').style.display = 'none';
-                document.getElementById('recordingIndicator').style.display = 'none';
-                document.getElementById('stopButton').disabled = true;
-                isNewResponseReceived = false; // Сброс флага при остановке записи
-            };
-        }
-        /*function stopRecording() {
-            clearInterval(intervalId);
-            recorder.stop();
-            recorder.onstop = () => {
-                document.getElementById('startButton').style.display = 'inline';
-                document.getElementById('stopButton').style.display = 'none';
-                document.getElementById('recordingIndicator').style.display = 'none';
-                document.getElementById('stopButton').disabled = true;
-            };
-        }*/
-    </script>
-  </body>
+        <script src="{{ url_for('static',filename='script.js') }}"></script>
+    </body>
 </html>

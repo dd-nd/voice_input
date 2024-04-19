@@ -1,0 +1,40 @@
+.btn {
+    border-radius: 25px;
+    border: none;
+    width: 300px;
+    height: 40px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background-color: antiquewhite;
+}
+
+.container {
+    justify-content: center;
+    height: 100dvh;
+    align-items: center;
+    display: flex;
+    gap: 10px;
+    flex-direction: column;
+}
+
+.audio-player {
+    width: 300px;
+    padding: 0;
+    margin: 0;
+}
+
+.text {
+    margin: 20px 0 20px 0;
+}
+
+audio::-webkit-media-controls-panel {
+    background-color: antiquewhite;
+    width: 10px;
+}
+
+audio::-webkit-media-controls-mute-button {
+    width: 10px;
+}
