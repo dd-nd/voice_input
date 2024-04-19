@@ -23,7 +23,7 @@ function startRecording() {
 
         intervalId = setInterval(() => {
             sendAudioData();
-        }, 3000);
+        }, 2000);
     })
     .catch((error) => {
         console.error('Error accessing microphone:', error);
