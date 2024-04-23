@@ -3,34 +3,58 @@ let audioChunks = [];
 let intervalId;
 
 function startRecording() {
-    audioChunks = [];
-    navigator.mediaDevices
-    .getUserMedia({ audio: true })
-    .then((stream) => {
-        recorder = new MediaRecorder(stream, { audioBitsPerSecond: 16000 });
-
-        recorder.ondataavailable = (e) => {
-            if (e.data.size > 0) {
-                audioChunks.push(e.data);
-            }
-        };
-
-        recorder.start();
-        document.getElementById('startButton').style.display = 'none';
-        document.getElementById('stopButton').style.display = 'inline';
-        document.getElementById('recordingIndicator').style.display = 'inline';
-        document.getElementById('stopButton').disabled = false;
-
-        intervalId = setInterval(() => {
-            sendAudioData();
-        }, 2000);
+    fetch('/startRecording', {
+        method: 'POST',
     })
-    .catch((error) => {
-        console.error('Error accessing microphone:', error);
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Ошибка при запросе: ' + response.statusText);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
     });
+
+    document.getElementById('startButton').style.display = 'none';
+    document.getElementById('stopButton').style.display = 'inline';
+    document.getElementById('recordingIndicator').style.display = 'inline';
+    document.getElementById('stopButton').disabled = false;
 }
 
-let isNewResponseReceived = false;
+// Обработчик события клика на кнопке startRecording
+// document.getElementById('startButton').addEventListener('click', () => {
+//     startRecording(); 
+// });
+
+function stopRecording() {
+    fetch('/stopRecording', {
+        method: 'POST',
+    })
+    .then(response => {
+        if (response.ok) {
+            return response.json();
+        } else {
+            throw new Error('Ошибка при запросе: ' + response.statusText);
+        }
+    })
+    .catch(error => {
+        console.error('Ошибка:', error);
+    });
+
+    document.getElementById('startButton').style.display = 'inline';
+    document.getElementById('stopButton').style.display = 'none';
+    document.getElementById('recordingIndicator').style.display = 'none';
+    document.getElementById('stopButton').disabled = true;
+}
+
+// Обработчик события клика на кнопке stopButton
+// document.getElementById('stopButton').addEventListener('click', () => {
+//     stopRecording();
+// });
+
+/*let isNewResponseReceived = false;
 
 function sendAudioData() {
     if (recorder.state === 'recording') {
@@ -65,19 +89,19 @@ function sendAudioData() {
             document.getElementById('transcriptionResult').innerText = 'Ошибка: ' + error.message;
         });
     };
-}
+}*/
 
-function stopRecording() {
-    clearInterval(intervalId);
+// function stopRecording() {
+//     clearInterval(intervalId);
     
-    recorder.onstop = () => {
-        document.getElementById('startButton').style.display = 'inline';
-        document.getElementById('stopButton').style.display = 'none';
-        document.getElementById('recordingIndicator').style.display = 'none';
-        document.getElementById('stopButton').disabled = true;
-        isNewResponseReceived = false; // Сброс флага при остановке записи
-        sendAudioData();
+//     recorder.onstop = () => {
+//         document.getElementById('startButton').style.display = 'inline';
+//         document.getElementById('stopButton').style.display = 'none';
+//         document.getElementById('recordingIndicator').style.display = 'none';
+//         document.getElementById('stopButton').disabled = true;
+//         isNewResponseReceived = false; // Сброс флага при остановке записи
+//         sendAudioData();
         
-    };
-    recorder.stop();
-}
+//     };
+//     recorder.stop();
+// }
