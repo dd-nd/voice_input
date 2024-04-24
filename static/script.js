@@ -1,107 +1,73 @@
 let recorder;
 let audioChunks = [];
-let intervalId;
 
-function startRecording() {
-    fetch('/startRecording', {
-        method: 'POST',
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Ошибка при запросе: ' + response.statusText);
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
-    });
-
+// Функция начала записи
+async function startRecording() {
+  audioChunks = [];
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    recorder = new MediaRecorder(stream);
+    recorder.ondataavailable = (e) => {
+      audioChunks.push(e.data);
+    };
+    recorder.start();
     document.getElementById('startButton').style.display = 'none';
     document.getElementById('stopButton').style.display = 'inline';
     document.getElementById('recordingIndicator').style.display = 'inline';
     document.getElementById('stopButton').disabled = false;
-}
 
-// Обработчик события клика на кнопке startRecording
-// document.getElementById('startButton').addEventListener('click', () => {
-//     startRecording(); 
-// });
-
-function stopRecording() {
-    fetch('/stopRecording', {
-        method: 'POST',
-    })
-    .then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            throw new Error('Ошибка при запросе: ' + response.statusText);
-        }
-    })
-    .catch(error => {
-        console.error('Ошибка:', error);
+    await new Promise((resolve) => {
+      setTimeout(() => {
+        pauseRecording();
+        resolve();
+      }, 3000); // Задержка в 3 секунды
     });
-
-    document.getElementById('startButton').style.display = 'inline';
-    document.getElementById('stopButton').style.display = 'none';
-    document.getElementById('recordingIndicator').style.display = 'none';
-    document.getElementById('stopButton').disabled = true;
+  } catch (error) {
+    console.error('Error accessing microphone:', error);
+  }
 }
 
-// Обработчик события клика на кнопке stopButton
-// document.getElementById('stopButton').addEventListener('click', () => {
-//     stopRecording();
-// });
-
-/*let isNewResponseReceived = false;
-
-function sendAudioData() {
-    if (recorder.state === 'recording') {
-        recorder.requestData();
-    }
-
-    recorder.ondataavailable = (e) => {
-        audioChunks.push(e.data);
-        const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'audio.wav');
-
-        fetch('/transcribe', {
-            method: 'POST',
-            body: formData,
-        })
-        .then((response) => {
-            if (!response.ok) {
-                throw new Error('Ошибка при отправке аудио.');
-            }
-            return response.json();
-        })
-        .then((data) => {
-            if (isNewResponseReceived) {
-                document.getElementById('transcriptionResult').innerText += data.transcription;
-            } else {
-                document.getElementById('transcriptionResult').innerText = data.transcription;
-                isNewResponseReceived = true;
-            }
-        })
-        .catch((error) => {
-            document.getElementById('transcriptionResult').innerText = 'Ошибка: ' + error.message;
-        });
+// Функция остановки
+async function pauseRecording() {
+  recorder.stop();
+  await new Promise((resolve) => {
+    recorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      sendAudioData(audioBlob);
+      startRecording(); 
+      resolve();
     };
-}*/
+  });
+}
 
-// function stopRecording() {
-//     clearInterval(intervalId);
-    
-//     recorder.onstop = () => {
-//         document.getElementById('startButton').style.display = 'inline';
-//         document.getElementById('stopButton').style.display = 'none';
-//         document.getElementById('recordingIndicator').style.display = 'none';
-//         document.getElementById('stopButton').disabled = true;
-//         isNewResponseReceived = false; // Сброс флага при остановке записи
-//         sendAudioData();
-        
-//     };
-//     recorder.stop();
-// }
+// Функция завершения
+async function stopRecording() {
+  recorder.stop();
+  await new Promise((resolve) => {
+    recorder.onstop = () => {
+      const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+      sendAudioData(audioBlob);
+      document.getElementById('startButton').style.display = 'inline';
+      document.getElementById('stopButton').style.display = 'none';
+      document.getElementById('recordingIndicator').style.display = 'none';
+      document.getElementById('stopButton').disabled = true;
+      resolve();
+    };
+  });
+}
+
+// Функция отправки
+async function sendAudioData(blob) {
+  try {
+    let formData = new FormData();
+    formData.append("audio", blob);
+    const response = await fetch('/transcribe', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await response.json();
+    document.getElementById('transcriptionResult').innerText += data.transcription;
+  } catch (error) {
+    document.getElementById('transcriptionResult').innerText = 'Error: ' + error.message;
+  }
+}
