@@ -10,7 +10,7 @@ def main():
     return render_template('index.html')
 
 # Функция траскрибации
-@app.route('/transcribe', methods=['POST'])
+@app.route('/transcribe', methods=['PUT'])
 def transcribe_audio():
     try:
         audio_file = request.files['audio']

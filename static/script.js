@@ -62,7 +62,7 @@ async function sendAudioData(blob) {
     let formData = new FormData();
     formData.append("audio", blob);
     const response = await fetch('/transcribe', {
-      method: 'POST',
+      method: 'PUT',
       body: formData,
     });
     const data = await response.json();
