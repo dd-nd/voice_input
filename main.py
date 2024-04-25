@@ -9,8 +9,8 @@ transcriber = pipeline("automatic-speech-recognition", model="openai/whisper-tin
 def main():
     return render_template('index.html')
 
-# Функция для преобразования аудио в текст
-@app.route('/transcribe', methods=['POST'])
+# Функция траскрибации
+@app.route('/transcribe', methods=['PUT'])
 def transcribe_audio():
     try:
         audio_file = request.files['audio']

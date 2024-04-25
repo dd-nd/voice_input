@@ -1,100 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Audio Recorder</title>
-</head>
+    <head>
+        <meta charset="UTF-8" />
+        <link rel= "stylesheet" type= "text/css" href="{{ url_for('static',filename='style.css') }}">
+        <title>Real-time Audio Recognition</title>
+    </head>
+    <body>
+        <main style="display: flex; flex-direction: column; align-items: center; height: 100dvh; justify-content: center">
+            <div style="width: 600px; height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
+                <div style="display: flex">
+                    <button id="startButton" class="btn start" onclick="startRecording()">Начать запись</button>
+                    <button id="stopButton" class="btn stop" onclick="stopRecording()" style="display: none" disabled>Остановить запись</button>
+                </div>
+                <div style="text-align: center;">
+                    <div id="transcriptionResult" class="text result"></div>
+                    <p id="recordingIndicator"  class="status-record" style="display: none">Записываем...</p>
+                </div>
+            </div>
+        </main>
 
-<body>
-    <main style="display: flex; flex-direction: column; align-items: center; height: 100dvh; justify-content: center">
-    <div style="width: 600px; height: 500px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px">
-        <div style="display: flex">
-        <button id="startButton" onclick="startRecording()">Старт</button>
-        <button id="stopButton" onclick="stopRecording()" style="display: none" disabled>Стоп</button>
-        </div>
-        <div>
-        <div id="transcriptionResult"></div>
-        <p id="recordingIndicator" style="display: none">Записываем...</p>
-        </div>
-    </div>
-    </main>
-
-    <script>
-        let recorder;
-        let audioChunks = [];
-        let intervalId; // Идентификатор для управления интервалом
-
-        function startRecording() {
-            audioChunks = [];
-            navigator.mediaDevices
-            .getUserMedia({ audio: true })
-            .then((stream) => {
-                recorder = new MediaRecorder(stream, { audioBitsPerSecond: 16000 });
-
-                recorder.ondataavailable = (e) => {
-                if (e.data.size > 0) {
-                    audioChunks.push(e.data);
-                }
-                };
-
-                recorder.start();
-                document.getElementById('startButton').style.display = 'none';
-                document.getElementById('stopButton').style.display = 'inline';
-                document.getElementById('recordingIndicator').style.display = 'inline';
-                document.getElementById('stopButton').disabled = false;
-
-                intervalId = setInterval(() => {
-                sendAudioData();
-                }, 10000); // задаем время
-            })
-            .catch((error) => {
-                console.error('Error accessing microphone:', error);
-            });
-        }
-
-        function sendAudioData() {
-            if (recorder.state === 'recording') {
-            recorder.requestData();
-            }
-
-            recorder.ondataavailable = (e) => {
-                audioChunks.push(e.data);
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                const formData = new FormData();
-                formData.append('audio', audioBlob, 'audio.wav');
-
-                fetch('/transcribe', {
-                    method: 'POST',
-                    body: formData,
-                })
-                .then((response) => {
-                    if (!response.ok) {
-                        throw new Error('Ошибка при отправке аудио.');
-                    }
-                    return response.json();
-                })
-                .then((data) => {
-                    document.getElementById('transcriptionResult').innerText += data.transcription;
-                })
-                .catch((error) => {
-                    document.getElementById('transcriptionResult').innerText = 'Ошибка: ' + error.message;
-                });
-            };
-        }
-
-        function stopRecording() {
-            clearInterval(intervalId);
-            recorder.stop();
-            //audioChunks = [];
-            recorder.onstop = () => {
-            document.getElementById('startButton').style.display = 'inline';
-            document.getElementById('stopButton').style.display = 'none';
-            document.getElementById('recordingIndicator').style.display = 'none';
-            document.getElementById('stopButton').disabled = true;
-            };
-        }
-    </script>
-</body>
+        <script src="{{ url_for('static',filename='script.js') }}"></script>
+    </body>
 </html>
