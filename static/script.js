@@ -1,7 +1,35 @@
 let recorder;
 let audioChunks = [];
+const socket = new WebSocket('ws://127.0.0.1:8080/ws');
 
-// Функция начала записи
+socket.onopen = function(event) {
+  console.log('WebSocket connection established.');
+};
+
+socket.onerror = function(error) {
+  console.error('WebSocket error: ' + error);
+};
+
+// Функция отправки
+async function sendAudioData(blob) {
+  try {
+    if (socket.readyState === WebSocket.OPEN) {
+      socket.send(blob);
+    }
+    
+    socket.onmessage = function(event) {
+      const data = JSON.parse(event.data);
+      document.getElementById('transcriptionResult').innerText += data.transcription;
+    };
+
+    socket.onerror = function (error) {
+      document.getElementById('transcriptionResult').innerText = 'Error: ' + error.message;
+    };
+  } catch (error) {
+    document.getElementById('transcriptionResult').innerText = 'Error: ' + error.message;
+  }
+}
+
 async function startRecording() {
   audioChunks = [];
   try {
@@ -27,7 +55,6 @@ async function startRecording() {
   }
 }
 
-// Функция остановки
 async function pauseRecording() {
   recorder.stop();
   await new Promise((resolve) => {
@@ -40,7 +67,6 @@ async function pauseRecording() {
   });
 }
 
-// Функция завершения
 async function stopRecording() {
   recorder.stop();
   await new Promise((resolve) => {
@@ -54,20 +80,4 @@ async function stopRecording() {
       resolve();
     };
   });
-}
-
-// Функция отправки
-async function sendAudioData(blob) {
-  try {
-    let formData = new FormData();
-    formData.append("audio", blob);
-    const response = await fetch('/transcribe', {
-      method: 'PUT',
-      body: formData,
-    });
-    const data = await response.json();
-    document.getElementById('transcriptionResult').innerText += data.transcription;
-  } catch (error) {
-    document.getElementById('transcriptionResult').innerText = 'Error: ' + error.message;
-  }
 }
