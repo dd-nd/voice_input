@@ -33,7 +33,7 @@ async function sendAudioData(blob) {
 async function startRecording() {
   audioChunks = [];
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true }/*, { audioBitsPerSecond: 16000 }*/);
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true }, { audioBitsPerSecond: 16000 });
     recorder = new MediaRecorder(stream);
     recorder.ondataavailable = (e) => {
       audioChunks.push(e.data);
