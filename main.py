@@ -1,32 +1,51 @@
-from flask import Flask, jsonify, request, render_template
+from fastapi import FastAPI, WebSocket, UploadFile, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from transformers import pipeline
-from waitress import serve
+import uvicorn
 
-app = Flask(__name__)
+app = FastAPI()
+connected_websockets = set()
+
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory="templates")
+
 transcriber = pipeline("automatic-speech-recognition", model="openai/whisper-tiny", generate_kwargs={"language": "russian"})
 
-@app.route('/')
-def main():
-    return render_template('index.html')
 
-# Функция траскрибации
-@app.route('/transcribe', methods=['PUT'])
-def transcribe_audio():
+class AudioTranscriber:
+    def transcribe_audio(self, audio_data: UploadFile):
+        try:
+            if not audio_data:
+                return {'error': 'Empty file'}, 400
+            
+            transcription = transcriber(audio_data).get('text')
+            
+            if not transcription:
+                return {'error': 'Transcription failed'}, 500
+            
+            return {'transcription': transcription}
+        
+        except Exception as e:
+            error_message = f'Exception occurred: {str(e)}'
+            return {'error': error_message}, 500
+
+
+@app.get("/")
+async def read_index(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html")
+
+@app.websocket("/ws")
+async def websocket_transcribe(websocket: WebSocket):
+    await websocket.accept()
     try:
-        audio_file = request.files['audio']
-        if audio_file.filename == '':
-            return jsonify({'error': 'No file selected'}), 400
-
-        audio_file.seek(0)
-        audio_data = audio_file.read()  
-        
-        transcription = transcriber(audio_data).get('text')
-        
-        response = jsonify({'transcription': transcription})
-        
-        return response
+        while True:
+            audio_data = await websocket.receive_bytes()
+            response = AudioTranscriber().transcribe_audio(audio_data)
+            await websocket.send_json(response)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500    
+        await websocket.close(code=1001, reason=str(e))
+        raise e
 
 if __name__ == "__main__":
-    serve(app, host="127.0.0.1", port=8800)
+    uvicorn.run(app, host="127.0.0.1", port=8080)
